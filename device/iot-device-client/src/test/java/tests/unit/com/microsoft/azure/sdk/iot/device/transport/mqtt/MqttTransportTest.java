@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 /**
  * Unit tests for MqttTransport.java
  * Method: 90%
- * Lines: 94%
+ * Lines: 93%
  */
 public class MqttTransportTest
 {
@@ -70,10 +70,6 @@ public class MqttTransportTest
             }
         };
         
-        Field sendMessagesLock = transport.getClass().getDeclaredField("sendMessagesLock");
-        sendMessagesLock.setAccessible(true);
-        assertNotNull(sendMessagesLock.get(transport));
-
         Field handleMessageLock = transport.getClass().getDeclaredField("handleMessageLock");
         handleMessageLock.setAccessible(true);
         assertNotNull(handleMessageLock.get(transport));

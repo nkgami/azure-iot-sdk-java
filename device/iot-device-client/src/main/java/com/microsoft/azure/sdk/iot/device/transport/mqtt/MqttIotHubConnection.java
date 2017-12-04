@@ -3,10 +3,7 @@
 
 package com.microsoft.azure.sdk.iot.device.transport.mqtt;
 
-import com.microsoft.azure.sdk.iot.device.DeviceClientConfig;
-import com.microsoft.azure.sdk.iot.device.IotHubStatusCode;
-import com.microsoft.azure.sdk.iot.device.Message;
-import com.microsoft.azure.sdk.iot.device.MessageType;
+import com.microsoft.azure.sdk.iot.device.*;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubTransportMessage;
 import com.microsoft.azure.sdk.iot.device.transport.State;
 import com.microsoft.azure.sdk.iot.device.transport.TransportUtils;
@@ -180,7 +177,6 @@ public class MqttIotHubConnection
                 }
                 throw new IOException(e);
             }
-
         }
     }
 
@@ -317,5 +313,34 @@ public class MqttIotHubConnection
             message = deviceMessaging.receive();
         }
         return message;
+    }
+
+    /**
+     * Registers a callback to be executed whenever the mqtt connection is lost or established.
+     *
+     * @param callback the callback to be called.
+     * @param callbackContext a context to be passed to the callback. Can be
+     * {@code null} if no callback is provided.
+     * @throws IllegalArgumentException if callback is null
+     */
+    protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext)
+    {
+        if (this.deviceMessaging != null)
+        {
+            //Codes_SRS_MQTTIOTHUBCONNECTION_34_028: [If the saved deviceMessaging object is not null, this function shall invoke that object to register the provided connection state callback.]
+            this.deviceMessaging.registerConnectionStateCallback(callback, callbackContext);
+        }
+
+        if (this.deviceMethod != null)
+        {
+            //Codes_SRS_MQTTIOTHUBCONNECTION_34_030: [If the saved deviceMethod object is not null, this function shall invoke that object to register the provided connection state callback.]
+            this.deviceMethod.registerConnectionStateCallback(callback, callbackContext);
+        }
+
+        if (this.deviceTwin != null)
+        {
+            //Codes_SRS_MQTTIOTHUBCONNECTION_34_029: [If the saved deviceTwin object is not null, this function shall invoke that object to register the provided connection state callback.]
+            this.deviceTwin.registerConnectionStateCallback(callback, callbackContext);
+        }
     }
 }

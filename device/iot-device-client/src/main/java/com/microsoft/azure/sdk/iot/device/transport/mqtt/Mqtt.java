@@ -4,6 +4,8 @@
 package com.microsoft.azure.sdk.iot.device.transport.mqtt;
 
 import com.microsoft.azure.sdk.iot.device.DeviceClientConfig;
+import com.microsoft.azure.sdk.iot.device.IotHubConnectionState;
+import com.microsoft.azure.sdk.iot.device.IotHubConnectionStateCallback;
 import com.microsoft.azure.sdk.iot.device.Message;
 import com.microsoft.azure.sdk.iot.device.auth.IotHubSasToken;
 import com.microsoft.azure.sdk.iot.device.transport.TransportUtils;
@@ -27,6 +29,9 @@ abstract public class Mqtt implements MqttCallback
 
     // SAS token expiration check on retry
     private boolean userSpecifiedSASTokenExpiredOnRetry = false;
+
+    private IotHubConnectionStateCallback connectionStateCallback;
+    private Object connectionStateCallbackContext;
 
     /* Each property is separated by & and all system properties start with an encoded $ (except for iothub-ack) */
     final static char MESSAGE_PROPERTY_SEPARATOR = '&';
@@ -345,6 +350,12 @@ abstract public class Mqtt implements MqttCallback
     @Override
     public void connectionLost(Throwable throwable)
     {
+        if (this.connectionStateCallback != null)
+        {
+            //Codes_SRS_Mqtt_34_045: [If this object's connectionStateCallback is not null, this function shall execute the saved connectionStateCallback with status CONNECTION_DROP with the saved callback context.]
+            this.connectionStateCallback.execute(IotHubConnectionState.CONNECTION_DROP, this.connectionStateCallbackContext);
+        }
+
         synchronized (this.mqttLock)
         {
             if (this.mqttConnection != null && this.mqttConnection.getMqttAsyncClient() != null)
@@ -569,5 +580,26 @@ abstract public class Mqtt implements MqttCallback
         }
 
         this.deviceClientConfig = deviceConfig; // set device client config object
+    }
+
+    /**
+     * Registers a callback to be executed whenever the mqtt connection is lost or established.
+     *
+     * @param callback the callback to be called.
+     * @param callbackContext a context to be passed to the callback. Can be
+     * {@code null} if no callback is provided.
+     * @throws IllegalArgumentException if callback is null
+     */
+    protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext)
+    {
+        if (callback == null)
+        {
+            //Codes_SRS_Mqtt_34_042: [If the provided callback object is null, this function shall throw an IllegalArgumentException.]
+            throw new IllegalArgumentException("Callback cannot be null");
+        }
+
+        //Codes_SRS_Mqtt_34_043: [This function shall save the provided callback and callbackContext objects.]
+        this.connectionStateCallback = callback;
+        this.connectionStateCallbackContext = callbackContext;
     }
 }

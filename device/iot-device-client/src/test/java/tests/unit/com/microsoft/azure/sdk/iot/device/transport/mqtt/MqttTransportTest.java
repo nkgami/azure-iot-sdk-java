@@ -488,6 +488,49 @@ public class MqttTransportTest
         assertEquals(registeredConnectionStateCallbackContext, mockConnectionStateCallbackContext);
     }
 
+    //Tests_SRS_MQTTTRANSPORT_34_028: [If this object's mqtt iot hub connection object has already been opened, this function shall register the provided connection state callback with the iot hub connection object.]
+    @Test
+    public void registerConnectionStateCallbackRegistersConnectionCallbackWithMqttIotHubConnection() throws IOException
+    {
+        //arrange
+        MqttTransport transport = new MqttTransport(mockConfig);
+        transport.open();
+
+        //act
+        transport.registerConnectionStateCallback(mockConnectionStateCallback, mockConnectionStateCallbackContext);
+
+        //assert
+        new Verifications()
+        {
+            {
+                Deencapsulation.invoke(mockConnection, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, mockConnectionStateCallbackContext);
+                times = 1;
+            }
+        };
+    }
+
+    //Tests_SRS_MQTTTRANSPORT_34_029: [If this object has a registered connection state callback, this function shall register the provided connection state callback with the new iot hub connection object.]
+    @Test
+    public void openRegistersConnectionCallbackWithMqttIotHubConnection() throws IOException
+    {
+        //arrange
+        MqttTransport transport = new MqttTransport(mockConfig);
+        transport.registerConnectionStateCallback(mockConnectionStateCallback, mockConnectionStateCallbackContext);
+
+        //act
+        transport.open();
+
+        //assert
+        new Verifications()
+        {
+            {
+                Deencapsulation.invoke(mockConnection, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, mockConnectionStateCallbackContext);
+                times = 1;
+            }
+        };
+    }
+
+
     // Tests_SRS_MQTTTRANSPORT_15_011: [If the IoT Hub could not be reached, 
     // the message shall be buffered to be sent again next time.]
     @Test

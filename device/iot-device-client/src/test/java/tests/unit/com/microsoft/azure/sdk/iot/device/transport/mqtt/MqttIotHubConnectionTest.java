@@ -3,10 +3,7 @@
 
 package tests.unit.com.microsoft.azure.sdk.iot.device.transport.mqtt;
 
-import com.microsoft.azure.sdk.iot.device.DeviceClientConfig;
-import com.microsoft.azure.sdk.iot.device.IotHubStatusCode;
-import com.microsoft.azure.sdk.iot.device.Message;
-import com.microsoft.azure.sdk.iot.device.MessageType;
+import com.microsoft.azure.sdk.iot.device.*;
 import com.microsoft.azure.sdk.iot.device.net.IotHubUri;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubTransportMessage;
 import com.microsoft.azure.sdk.iot.device.transport.State;
@@ -62,6 +59,9 @@ public class MqttIotHubConnectionTest
 
     @Mocked
     private MqttConnection mockedMqttConnection;
+
+    @Mocked
+    private IotHubConnectionStateCallback mockConnectionStateCallback;
 
     // Tests_SRS_MQTTIOTHUBCONNECTION_15_001: [The constructor shall save the configuration.]
     @Test
@@ -1091,5 +1091,51 @@ public class MqttIotHubConnectionTest
 
         MqttIotHubConnection connection = new MqttIotHubConnection(mockConfig);
         connection.open();
+    }
+
+    //Tests_SRS_MQTTIOTHUBCONNECTION_34_028: [If the saved deviceMessaging object is not null, this function shall invoke that object to register the provided connection state callback.]
+    //Tests_SRS_MQTTIOTHUBCONNECTION_34_029: [If the saved deviceTwin object is not null, this function shall invoke that object to register the provided connection state callback.]
+    //Tests_SRS_MQTTIOTHUBCONNECTION_34_030: [If the saved deviceMethod object is not null, this function shall invoke that object to register the provided connection state callback.]
+    @Test
+    public void registerConnectionStateCallbackRegistersConnectionStateCallbackWithMessagingClients() throws IOException
+    {
+        //arrange
+        final Object expectedConnectionCallbackStateContext = new Object();
+        new NonStrictExpectations()
+        {
+            {
+                mockConfig.getIotHubHostname();
+                result = "some host";
+                mockConfig.getDeviceId();
+                result = "some device id";
+                mockConfig.getIotHubName();
+                result = "some hub name";
+                mockConfig.getAuthenticationType();
+                result = DeviceClientConfig.AuthType.X509_CERTIFICATE;
+
+                new MqttDeviceTwin((MqttConnection) any);
+                result = mockDeviceTwin;
+                new MqttDeviceMethod((MqttConnection) any);
+                result = mockDeviceMethod;
+                new MqttMessaging((MqttConnection) any, anyString);
+                result = mockDeviceMessaging;
+            }
+        };
+
+        MqttIotHubConnection connection = new MqttIotHubConnection(mockConfig);
+        connection.open();
+
+        //act
+        Deencapsulation.invoke(connection, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedConnectionCallbackStateContext);
+
+        //assert
+        new Verifications()
+        {
+            {
+                Deencapsulation.invoke(mockDeviceTwin, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedConnectionCallbackStateContext);
+                Deencapsulation.invoke(mockDeviceMethod, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedConnectionCallbackStateContext);
+                Deencapsulation.invoke(mockDeviceMessaging, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedConnectionCallbackStateContext);
+            }
+        };
     }
 }

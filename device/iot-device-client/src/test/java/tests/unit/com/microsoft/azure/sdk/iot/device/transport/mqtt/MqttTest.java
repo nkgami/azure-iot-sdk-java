@@ -3,6 +3,8 @@
 package tests.unit.com.microsoft.azure.sdk.iot.device.transport.mqtt;
 
 import com.microsoft.azure.sdk.iot.device.DeviceClientConfig;
+import com.microsoft.azure.sdk.iot.device.IotHubConnectionState;
+import com.microsoft.azure.sdk.iot.device.IotHubConnectionStateCallback;
 import com.microsoft.azure.sdk.iot.device.Message;
 import com.microsoft.azure.sdk.iot.device.auth.IotHubSasToken;
 import com.microsoft.azure.sdk.iot.device.transport.mqtt.Mqtt;
@@ -25,9 +27,10 @@ import static org.junit.Assert.*;
 
 /**
  * Unit test for Mqtt class.
- * 86% methods, 82% lines covered
+ * 86% methods, 86% lines covered
  */
-public class MqttTest {
+public class MqttTest
+{
     private static final String CLIENT_ID = "test.iothub";
     private static final String MOCK_PARSE_TOPIC = "devices/deviceID/messages/devicebound/%24.mid=69ea4caf-d83e-454b-81f2-caafda4c81c8&%24.exp=0&%24.to=%2Fdevices%2FdeviceID%2Fmessages%2FdeviceBound&%24.cid=169c34b3-99b0-49f9-b0f6-8fa9d2c99345&iothub-ack=full&property1=value1";
     private static final byte[] EXPECTED_PAYLOAD = {0x61, 0x62, 0x63};
@@ -60,6 +63,9 @@ public class MqttTest {
 
     @Mocked
     private MqttConnection mockedMqttConnection;
+
+    @Mocked
+    private IotHubConnectionStateCallback mockConnectionStateCallback;
 
     @Before
     public void setUp()
@@ -1027,15 +1033,10 @@ public class MqttTest {
         }
     }
 
-   /*
-    **Tests_SRS_Mqtt_99_050: [**The function shall check if SAS token has already expired.**]**
-    */
-    /*
-    **Tests_SRS_Mqtt_25_026: [**The function shall notify all its concrete classes by calling abstract method onReconnect at the entry of the function**]**
-     */
-    /*
-    **Tests_SRS_Mqtt_25_029: [**The function shall notify all its concrete classes by calling abstract method onReconnectComplete at the exit of the function**]**
-     */
+    //Tests_SRS_Mqtt_99_050: [**The function shall check if SAS token has already expired.]
+    //Tests_SRS_Mqtt_25_026: [The function shall notify all its concrete classes by calling abstract method onReconnect at the entry of the function]
+    //Tests_SRS_Mqtt_25_029: [The function shall notify all its concrete classes by calling abstract method onReconnectComplete at the exit of the function]
+    //Tests_SRS_Mqtt_34_045: [If this object's connectionStateCallback is not null, this function shall execute the saved connectionStateCallback with status CONNECTION_DROP with the saved callback context.]
     @Test
     public void connectionLostAttemptsToReconnectWithSASTokenStillValid() throws IOException, MqttException
     {
@@ -1043,10 +1044,13 @@ public class MqttTest {
         Mqtt mockMqtt = null;
         Throwable t = new Throwable();
         baseConstructorExpectations();
+        final Object expectedCallbackContext = new Object();
 
         new StrictExpectations()
         {
             {
+                mockConnectionStateCallback.execute(IotHubConnectionState.CONNECTION_DROP, expectedCallbackContext);
+
                 mockMqttAsyncClient.isConnected();
                 result = false;
 
@@ -1073,6 +1077,7 @@ public class MqttTest {
         {
             mockMqtt = instantiateMqtt(true);
             Deencapsulation.invoke(mockMqtt, "setDeviceClientConfig", mockDeviceClientConfig);
+            Deencapsulation.invoke(mockMqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedCallbackContext);
             mockMqtt.connectionLost(t);
         }
         catch (Exception e)
@@ -1107,6 +1112,8 @@ public class MqttTest {
         new StrictExpectations()
         {
             {
+                mockConnectionStateCallback.execute(IotHubConnectionState.CONNECTION_DROP, null);
+
                 mockMqttAsyncClient.isConnected();
                 result = false;
                 mockDeviceClientConfig.getAuthenticationType();
@@ -1137,6 +1144,7 @@ public class MqttTest {
         {
             mockMqtt = instantiateMqtt(true);
             Deencapsulation.setField(mockMqtt, "deviceClientConfig", mockDeviceClientConfig);
+            Deencapsulation.invoke(mockMqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, null);
             mockMqtt.connectionLost(t);
         }
         catch (Exception e)
@@ -1163,6 +1171,8 @@ public class MqttTest {
         new StrictExpectations()
         {
             {
+                mockConnectionStateCallback.execute(IotHubConnectionState.CONNECTION_DROP, null);
+
                 mockMqttAsyncClient.isConnected();
                 result = false;
 
@@ -1180,6 +1190,7 @@ public class MqttTest {
         //act
         mockMqtt = instantiateMqtt(true);
         Deencapsulation.invoke(mockMqtt, "setDeviceClientConfig", mockDeviceClientConfig);
+        Deencapsulation.invoke(mockMqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, null);
         mockMqtt.connectionLost(t);
         Deencapsulation.invoke(mockMqtt, "publish", MOCK_PARSE_TOPIC, payload);
     }
@@ -1207,6 +1218,8 @@ public class MqttTest {
         new StrictExpectations()
         {
             {
+                mockConnectionStateCallback.execute(IotHubConnectionState.CONNECTION_DROP, null);
+
                 mockMqttAsyncClient.isConnected();
                 result = false;
 
@@ -1221,7 +1234,6 @@ public class MqttTest {
 
                 mockMqttAsyncClient.connect(mockMqttConnectionOptions);
                 result = mockMqttException;
-
 
                 mockMqttAsyncClient.isConnected();
                 result = false;
@@ -1249,6 +1261,7 @@ public class MqttTest {
         {
             mockMqtt = instantiateMqtt(true);
             Deencapsulation.invoke(mockMqtt, "setDeviceClientConfig", mockDeviceClientConfig);
+            Deencapsulation.invoke(mockMqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, null);
             mockMqtt.connectionLost(t);
         }
         catch (Exception e)
@@ -1416,5 +1429,36 @@ public class MqttTest {
         Mqtt mockMqtt = instantiateMqtt(true);
 
         Deencapsulation.invoke(mockMqtt,"setDeviceClientConfig", new Class[] {DeviceClientConfig.class},(DeviceClientConfig)null);
-    } 
+    }
+
+    //Tests_SRS_Mqtt_34_042: [If the provided callback object is null, this function shall throw an IllegalArgumentException.]
+    @Test (expected = IllegalArgumentException.class)
+    public void registerConnectionStateCallbackThrowsForNullCallback() throws IOException
+    {
+        //arrange
+        Mqtt mqtt = instantiateMqtt(false);
+
+        //act
+        Deencapsulation.invoke(mqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, null, new Object());
+    }
+
+    //Tests_SRS_Mqtt_34_043: [This function shall save the provided callback and callbackContext objects.]
+    @Test
+    public void registerConnectionStateCallbackSavesCallbackAndContext() throws IOException
+    {
+        //arrange
+        Mqtt mqtt = instantiateMqtt(false);
+
+        Object expectedConnectionStateCallbackContext = new Object();
+
+        //act
+        Deencapsulation.invoke(mqtt, "registerConnectionStateCallback", new Class[] {IotHubConnectionStateCallback.class, Object.class}, mockConnectionStateCallback, expectedConnectionStateCallbackContext);
+
+        //assert
+        IotHubConnectionStateCallback actualCallback = Deencapsulation.getField(mqtt, "connectionStateCallback");
+        Object actualContext = Deencapsulation.getField(mqtt, "connectionStateCallbackContext");
+
+        assertEquals(mockConnectionStateCallback, actualCallback);
+        assertEquals(expectedConnectionStateCallbackContext, actualContext);
+    }
 }

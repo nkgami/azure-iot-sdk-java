@@ -86,6 +86,12 @@ public final class MqttTransport implements IotHubTransport
         this.mqttIotHubConnection = new MqttIotHubConnection(this.config);
         this.mqttIotHubConnection.open();
 
+        if (this.stateCallback != null)
+        {
+            //Codes_SRS_MQTTTRANSPORT_34_029: [If this object has a registered connection state callback, this function shall register the provided connection state callback with the new iot hub connection object.]
+            this.mqttIotHubConnection.registerConnectionStateCallback(this.stateCallback, this.stateCallbackContext);
+        }
+
         this.state = State.OPEN;
     }
 
@@ -392,5 +398,11 @@ public final class MqttTransport implements IotHubTransport
         //Codes_SRS_MQTTTRANSPORT_34_026: [This function shall register the connection state callback.]
         this.stateCallback = callback;
         this.stateCallbackContext = callbackContext;
+
+        if (this.mqttIotHubConnection != null)
+        {
+            //Codes_SRS_MQTTTRANSPORT_34_028: [If this object's mqtt iot hub connection object has already been opened, this function shall register the provided connection state callback with the iot hub connection object.]
+            this.mqttIotHubConnection.registerConnectionStateCallback(callback, callbackContext);
+        }
     }
 }

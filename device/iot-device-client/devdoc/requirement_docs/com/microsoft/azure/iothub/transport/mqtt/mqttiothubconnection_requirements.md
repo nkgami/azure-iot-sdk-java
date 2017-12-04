@@ -17,7 +17,7 @@ public final class MqttIotHubConnection
     public void close();
     public IotHubStatusCode sendEvent(Message msg) throws IllegalStateException;
     public Message receiveMessage() throws IllegalStateException;
-
+    protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext);
 }
 ```
 
@@ -100,3 +100,15 @@ public Message receiveMessage() throws IllegalStateException, IOException;
 **SRS_MQTTIOTHUBCONNECTION_34_016: [**If any of the messaging clients throw an exception, The associated message will be removed from the queue and the exception will be propagated up to the receive task.**]**
 
 **SRS_MQTTIOTHUBCONNECTION_34_017: [**If all of the messaging clients fail to receive, the function shall throw an UnsupportedOperationException.**]**
+
+
+### registerConnectionStateCallback
+```java
+protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext);
+```
+
+**SRS_MQTTIOTHUBCONNECTION_34_028: [**If the saved deviceMessaging object is not null, this function shall invoke that object to register the provided connection state callback.**]**
+
+**SRS_MQTTIOTHUBCONNECTION_34_029: [**If the saved deviceTwin object is not null, this function shall invoke that object to register the provided connection state callback.**]**
+
+**SRS_MQTTIOTHUBCONNECTION_34_030: [**If the saved deviceMethod object is not null, this function shall invoke that object to register the provided connection state callback.**]**

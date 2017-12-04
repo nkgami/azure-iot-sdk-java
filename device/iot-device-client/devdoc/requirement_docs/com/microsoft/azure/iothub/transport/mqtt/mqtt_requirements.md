@@ -30,6 +30,8 @@ public final class Mqtt implements MqttCallback
 
     public void connectionLost(Throwable throwable);
     public void messageArrived(String topic, MqttMessage mqttMessage);
+    
+    protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext);
 }
 ```
 
@@ -145,6 +147,8 @@ public void connectionLost(Throwable throwable);
 
 **SRS_Mqtt_25_029: [**The function shall notify all its concrete classes by calling abstract method onReconnectComplete at the exit of the function**]**
 
+**SRS_Mqtt_34_045: [**If this object's connectionStateCallback is not null, this function shall execute the saved connectionStateCallback with status CONNECTION_DROP with the saved callback context.**]**
+
 
 ### messageArrived
 
@@ -179,7 +183,6 @@ private void assignPropertiesToMessage(Message message, String propertiesString)
 **SRS_Mqtt_34_054: [**A message may have 0 to many custom properties**]**
 
 
-
 ### peekMessage
 
 ```java
@@ -187,3 +190,13 @@ Pair<String, byte[]> peekMessage() throws IOException;
 ```
 
 **SRS_Mqtt_34_040: [**If allReceivedMessages queue is null then this method shall throw IOException.**]**
+
+
+### registerConnectionStateCallback
+```java
+protected void registerConnectionStateCallback(IotHubConnectionStateCallback callback, Object callbackContext);
+```
+
+**SRS_Mqtt_34_042: [**If the provided callback object is null, this function shall throw an IllegalArgumentException.**]**
+
+**SRS_Mqtt_34_043: [**This function shall save the provided callback and callbackContext objects.**]**

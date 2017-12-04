@@ -53,6 +53,8 @@ public void open() throws IOException;
 
 **SRS_MQTTTRANSPORT_15_004: [**If the MQTT connection is already open, the function shall do nothing.**]**
 
+**SRS_MQTTTRANSPORT_34_029: [**If this object has a registered connection state callback, this function shall register the provided connection state callback with the new iot hub connection object.**]**
+
 
 ### close
 
@@ -153,3 +155,5 @@ public void registerConnectionStateCallback(IotHubConnectionStateCallback callba
 **SRS_MQTTTRANSPORT_34_025: [**If the provided callback is null, an IllegalArgumentException shall be thrown.**]**
 
 **SRS_MQTTTRANSPORT_34_026: [**This function shall register the connection state callback.**]**
+
+**SRS_MQTTTRANSPORT_34_028: [**If this object's mqtt iot hub connection object has already been opened, this function shall register the provided connection state callback with the iot hub connection object.**]**

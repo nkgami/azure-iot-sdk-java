@@ -7,7 +7,7 @@
 
 package tests.unit.com.microsoft.azure.sdk.iot.provisioning.security.hsm;
 
-public class SecurityClientX509CertTest
+public class SecurityProviderX509CertTest
 {
 
 }
